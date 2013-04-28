@@ -30,15 +30,27 @@ describe("Testing uuid library", function()
     assert.not_has_error(function() uuid("1234567890123") end)  -- oversize
   end)
   
-  it("tests using luasocket gettime() if available", function()
+  it("tests using luasocket gettime() if available, os.time() if unavailable", function()
     -- create a fake socket module with a spy.
     local ls = { gettime = spy.new(function() return 123.123 end) }
     package.loaded["socket"] = ls
     -- clear loaded uuid module, and reload
     package.loaded["uuid"] = nil
     uuid = require("uuid")
+    package.loaded["socket"] = nil
     -- now check whether our gettime() function was called
     assert.spy(ls.gettime).was.called(1)
+    
+    -- do again with os.time()
+    local ot = os.time
+    os.time = spy.new(os.time)
+    -- clear loaded uuid module, and reload
+    package.loaded["uuid"] = nil
+    uuid = require("uuid")
+    -- now check whether our gettime() function was called
+    assert.spy(os.time).was.called(1)
+    os.time = ot
+    
   end)
   
 end)
