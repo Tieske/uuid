@@ -12,12 +12,14 @@ describe("Testing uuid library", function()
   end)
 
   it("tests the format of the generated uuid", function()
-    local u = uuid()
-    assert.are_equal("-", u:sub(9,9))
-    assert.are_equal("-", u:sub(14,14))
-    assert.are_equal("-", u:sub(19,19))
-    assert.are_equal("-", u:sub(24,24))
-    assert.are_equal(36, #u)
+    for i = 1, 1000 do    -- some where to short, see issue #1, so test a bunch
+      local u = uuid()
+      assert.are_equal("-", u:sub(9,9))
+      assert.are_equal("-", u:sub(14,14))
+      assert.are_equal("-", u:sub(19,19))
+      assert.are_equal("-", u:sub(24,24))
+      assert.are_equal(36, #u)
+    end
   end)
   
   it("tests the hwaddr parameter" , function()

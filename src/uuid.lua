@@ -13,14 +13,17 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 -- 
--- see http://www.ietf.org/rfc/rfc4122.txt 
--- Note that this is not a true version 4 (random) UUID.  Since os.time() precision is only 1 second, it would be hard
+-- see http://www.ietf.org/rfc/rfc4122.txt
+--
+-- Note that this is not a true version 4 (random) UUID.  Since `os.time()` precision is only 1 second, it would be hard
 -- to guarantee spacial uniqueness when two hosts generate a uuid after being seeded during the same second.  This
 -- is solved by using the node field from a version 1 UUID.  It represents the mac address.
 -- 
--- 28-apr-2013 modified by Thijs Schreijer from the original [Rackspace code](https://github.com/kans/zirgo/blob/807250b1af6725bad4776c931c89a784c1e34db2/util/uuid.lua) as a generic Lua module
--- 
+-- 28-apr-2013 modified by Thijs Schreijer from the original [Rackspace code](https://github.com/kans/zirgo/blob/807250b1af6725bad4776c931c89a784c1e34db2/util/uuid.lua) as a generic Lua module.
+-- Regarding the above mention on `os.time()`; the modifications use the `socket.gettime()` function from LuaSocket
+-- if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).
 
+local M = {}
 local math = require('math')
 local os = require('os')
 local string = require('string')
@@ -59,7 +62,7 @@ local function INT2HEX(x)
     x = math.floor(x/base)
     s = string.sub(HEXES, d, d)..s
   end
-  if #s == 1 then s = "0" .. s end
+  while #s < 2 do s = "0" .. s end
   return s
 end
 
@@ -86,7 +89,10 @@ end
 --
 -- @return a properly formatted uuid string
 -- @param hwaddr (optional) string containing a unique hex value (e.g.: `00:0c:29:69:41:c6`), to be used to compensate for the lesser `math.random()` function. Use a mac address for solid results. If omitted, a fully randomized uuid will be generated, but then you must ensure that the random seed is set properly!
-local function new(hwaddr)
+-- @usage
+-- local uuid = require("uuid")
+-- print("here's a new uuid: ",uuid())
+function M.new(hwaddr)
   -- bytes are treated as 8bit unsigned bytes.
   local bytes = {
       math.random(0, 255),
@@ -144,4 +150,4 @@ local function new(hwaddr)
 end
 
 
-return setmetatable( {new = new}, { __call = function(self, hwaddr) return self.new(hwaddr) end} )
+return setmetatable( M, { __call = function(self, hwaddr) return self.new(hwaddr) end} )

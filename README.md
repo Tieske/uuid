@@ -24,3 +24,10 @@ NOTE: on windows, skip the `sudo` in the commands above.
 Test
 ====
 Tests are available and can be executed using [busted](http://olivinelabs.com/busted/)
+
+Changes
+=======
+
+- 0.1.1   09-May-2013   Bugfix; 0-hex was displayed as "" instead of "00", making some uuids too short 
+- 0.1     28-Apr-2013   initial version
+
