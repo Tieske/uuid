@@ -1,8 +1,8 @@
 package = "uuid"
-version = "0.1.1-1"
+version = "0.2-1"
 source = {
-    url = "https://github.com/Tieske/uuid/archive/version_0.1.1.tar.gz",
-    dir = "uuid-version_0.1.1",
+    url = "https://github.com/Tieske/uuid/archive/version_0.2.0.tar.gz",
+    dir = "uuid-version_0.2.0",
 }
 description = {
     summary = "Generates uuids in pure Lua",

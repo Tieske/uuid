@@ -28,7 +28,7 @@ Tests are available and can be executed using [busted](http://olivinelabs.com/bu
 Changes
 =======
 
-0.1.1   09-May-2013
+0.2     09-May-2013
 
   - Bugfix; 0-hex was displayed as "" instead of "00", making some uuids too short
   - Bugfix; math.randomseed() overflow caused bad seeding
