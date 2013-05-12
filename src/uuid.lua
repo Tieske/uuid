@@ -28,14 +28,8 @@ local math = require('math')
 local os = require('os')
 local string = require('string')
 
--- seed the random generator.  note that os.time() only offers resolution to one second, 
--- so preferably use luasocket gettime() function, but only when it has been required
--- already.
-if package.loaded["socket"] and package.loaded["socket"].gettime then
-  math.randomseed(package.loaded["socket"].gettime()*100000)
-else
-  math.randomseed(os.time())
-end
+local bitsize = 32  -- bitsize assumed for Lua VM. See randomseed function below.
+local lua_version = tonumber(_VERSION:match("%d%.*%d*"))  -- grab Lua version used
 
 local MATRIX_AND = {{0,0},{0,1} }
 local MATRIX_OR = {{0,1},{1,1}}
@@ -71,21 +65,14 @@ end
 -- random seed is properly set. The module table itself is a shortcut to this
 -- function, so `my_uuid = uuid.new()` equals `my_uuid = uuid()`.
 --
--- NOTE: if luasocket is required before this module, it will use the
--- `socket.gettime()` function to set the random seed, which should suffice. If
--- luasocket has not been loaded, it will set a random seed using `os.time()`.
+-- For proper use there are 3 options;
 --
--- __IMPORTANT__: requiring `uuid` WILL ALWAYS set a random seed, so if you set your own,
--- you must do so only AFTER requiring `uuid`, or it will be undone!
---
--- So for proper use there are 3 options;
---
--- 1. first require `luasocket`, then require `uuid`, and request a uuid using no 
--- parameter, eg. `my_uuid = uuid.new()`
--- 2. require `uuid` without `luasocket`, set a random seed using `math.randomseed(some_good_seed)`, 
--- and request a uuid using no parameter, eg. `my_uuid = uuid.new()`
--- 3. require `uuid` without `luasocket`, and request a uuid using an unique hex string, 
--- eg. `my_uuid = uuid.new(my_networkcard_macaddress)`
+-- 1. first require `luasocket`, then call `uuid.seed()`, and request a uuid using no 
+-- parameter, eg. `my_uuid = uuid()`
+-- 2. use `uuid` without `luasocket`, set a random seed using `uuid.randomseed(some_good_seed)`, 
+-- and request a uuid using no parameter, eg. `my_uuid = uuid()`
+-- 3. use `uuid` without `luasocket`, and request a uuid using an unique hex string, 
+-- eg. `my_uuid = uuid(my_networkcard_macaddress)`
 --
 -- @return a properly formatted uuid string
 -- @param hwaddr (optional) string containing a unique hex value (e.g.: `00:0c:29:69:41:c6`), to be used to compensate for the lesser `math.random()` function. Use a mac address for solid results. If omitted, a fully randomized uuid will be generated, but then you must ensure that the random seed is set properly!
@@ -149,5 +136,56 @@ function M.new(hwaddr)
          INT2HEX(bytes[11])..INT2HEX(bytes[12])..INT2HEX(bytes[13])..INT2HEX(bytes[14])..INT2HEX(bytes[15])..INT2HEX(bytes[16])
 end
 
+----------------------------------------------------------------------------
+-- Improved randomseed function.
+-- Lua 5.1 and 5.2 both truncate the seed given if it exceeds the integer
+-- range. If this happens, the seed will be 0 or 1 and all randomness will
+-- be gone (each application run will generate the same sequence of random
+-- numbers in that case). This improved version drops the most significant
+-- bits in those cases to get the seed within the proper range again.
+-- @param seed the random seed to set (integer from 0 - 2^32, negative values will be made positive)
+-- @return the (potentially modified) seed used
+-- @usage
+-- local socket = require("socket")  -- gettime() has higher precision than os.time()
+-- local uuid = require("uuid")
+-- -- see also example at uuid.seed()
+-- uuid.randomseed(socket.gettime()*10000)
+-- print("here's a new uuid: ",uuid())
+function M.randomseed(seed)
+  seed = math.floor(math.abs(seed))
+  if seed >= (2^bitsize) then
+    -- integer overflow, so reduce to prevent a bad seed
+    seed = seed - math.floor(seed / 2^bitsize) * (2^bitsize)
+  end
+  if lua_version < 5.2 then
+    -- 5.1 uses (incorrect) signed int
+    math.randomseed(seed - 2^(bitsize-1))
+  else
+    -- 5.2 uses (correct) unsigned int
+    math.randomseed(seed)
+  end
+  return seed
+end
+
+----------------------------------------------------------------------------
+-- Seeds the random generator.
+-- It does so in 2 possible ways;
+--
+-- 1. use `os.time()`: this only offers resolution to one second (used when
+-- LuaSocket hasn't been loaded yet
+-- 2. use luasocket `gettime()` function, but it only does so when LuaSocket
+-- has been required already.
+-- @usage
+-- local socket = require("socket")  -- gettime() has higher precision than os.time()
+-- -- LuaSocket loaded, so below line does the same as the example from randomseed()
+-- uuid.seed()
+-- print("here's a new uuid: ",uuid())
+function M.seed()
+  if package.loaded["socket"] and package.loaded["socket"].gettime then
+    return M.randomseed(package.loaded["socket"].gettime()*10000)
+  else
+    return M.randomseed(os.time())
+  end
+end
 
 return setmetatable( M, { __call = function(self, hwaddr) return self.new(hwaddr) end} )
