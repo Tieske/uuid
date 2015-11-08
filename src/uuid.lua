@@ -24,9 +24,9 @@
 -- if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).
 --
 -- **6-nov-2015 Please take note of this issue**; [https://github.com/Mashape/kong/issues/478](https://github.com/Mashape/kong/issues/478) 
--- It demonstrates the problem of using time as a random seed. Specifically when used from mutiple processes.
+-- It demonstrates the problem of using time as a random seed. Specifically when used from multiple processes.
 -- So make sure to seed only once, application wide. And to not have multiple processes do that
--- simultaneously (like nginx does for example)
+-- simultaneously (like nginx does for example).
 
 local M = {}
 local math = require('math')
