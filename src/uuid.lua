@@ -22,6 +22,11 @@
 -- 28-apr-2013 modified by Thijs Schreijer from the original [Rackspace code](https://github.com/kans/zirgo/blob/807250b1af6725bad4776c931c89a784c1e34db2/util/uuid.lua) as a generic Lua module.
 -- Regarding the above mention on `os.time()`; the modifications use the `socket.gettime()` function from LuaSocket
 -- if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).
+--
+-- **6-nov-2015 Please take note of this issue**; [https://github.com/Mashape/kong/issues/478](https://github.com/Mashape/kong/issues/478) 
+-- It demonstrates the problem of using time as a random seed. Specifically when used from mutiple processes.
+-- So make sure to seed only once, application wide. And to not have multiple processes do that
+-- simultaneously (like nginx does for example)
 
 local M = {}
 local math = require('math')
