@@ -102,13 +102,14 @@ function M.new(hwaddr)
       math.random(0, 255),
       math.random(0, 255),
       math.random(0, 255),
-      math.random(0, 255),
+      math.random(0, 255)
     }
 
   if hwaddr then
     assert(type(hwaddr)=="string", "Expected hex string, got "..type(hwaddr))
     -- Cleanup provided string, assume mac address, so start from back and cleanup until we've got 12 characters
-    local i,str, hwaddr = #hwaddr, hwaddr, ""
+    local i,str = #hwaddr, hwaddr
+    hwaddr = ""
     while i>0 and #hwaddr<12 do
       local c = str:sub(i,i):lower()
       if HEXES:find(c, 1, true) then 
@@ -127,14 +128,14 @@ function M.new(hwaddr)
     bytes[15] = tonumber(hwaddr:sub(9, 10), 16)
     bytes[16] = tonumber(hwaddr:sub(11, 12), 16)
   end
-  
+
   -- set the version
   bytes[7] = BITWISE(bytes[7], 0x0f, MATRIX_AND)
   bytes[7] = BITWISE(bytes[7], 0x40, MATRIX_OR)
   -- set the variant
   bytes[9] = BITWISE(bytes[7], 0x3f, MATRIX_AND)
   bytes[9] = BITWISE(bytes[7], 0x80, MATRIX_OR)
-  return  INT2HEX(bytes[1])..INT2HEX(bytes[2])..INT2HEX(bytes[3])..INT2HEX(bytes[4]).."-"..
+  return INT2HEX(bytes[1])..INT2HEX(bytes[2])..INT2HEX(bytes[3])..INT2HEX(bytes[4]).."-"..
          INT2HEX(bytes[5])..INT2HEX(bytes[6]).."-"..
          INT2HEX(bytes[7])..INT2HEX(bytes[8]).."-"..
          INT2HEX(bytes[9])..INT2HEX(bytes[10]).."-"..
