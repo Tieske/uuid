@@ -141,8 +141,8 @@ function M.new(hwaddr)
   bytes[7] = BITWISE(bytes[7], 0x0f, MATRIX_AND)
   bytes[7] = BITWISE(bytes[7], 0x40, MATRIX_OR)
   -- set the variant
-  bytes[9] = BITWISE(bytes[7], 0x3f, MATRIX_AND)
-  bytes[9] = BITWISE(bytes[7], 0x80, MATRIX_OR)
+  bytes[9] = BITWISE(bytes[9], 0x3f, MATRIX_AND)
+  bytes[9] = BITWISE(bytes[9], 0x80, MATRIX_OR)
   return INT2HEX(bytes[1])..INT2HEX(bytes[2])..INT2HEX(bytes[3])..INT2HEX(bytes[4]).."-"..
          INT2HEX(bytes[5])..INT2HEX(bytes[6]).."-"..
          INT2HEX(bytes[7])..INT2HEX(bytes[8]).."-"..
