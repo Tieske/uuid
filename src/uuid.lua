@@ -183,19 +183,23 @@ end
 
 ----------------------------------------------------------------------------
 -- Seeds the random generator.
--- It does so in 2 possible ways;
+-- It does so in 3 possible ways;
 --
--- 1. use `os.time()`: this only offers resolution to one second (used when
--- LuaSocket hasn't been loaded yet
+-- 1. if in ngx_lua, use `ngx.time() + ngx.worker.pid()` to ensure a unique seed
+-- for each worker. It should ideally be called from the `init_worker` context.
 -- 2. use luasocket `gettime()` function, but it only does so when LuaSocket
 -- has been required already.
+-- 3. use `os.time()`: this only offers resolution to one second (used when
+-- LuaSocket hasn't been loaded)
 -- @usage
 -- local socket = require("socket")  -- gettime() has higher precision than os.time()
 -- -- LuaSocket loaded, so below line does the same as the example from randomseed()
 -- uuid.seed()
 -- print("here's a new uuid: ",uuid())
 function M.seed()
-  if package.loaded["socket"] and package.loaded["socket"].gettime then
+  if _G.ngx ~= nil then
+    return M.randomseed(ngx.time() + ngx.worker.pid())
+  elseif package.loaded["socket"] and package.loaded["socket"].gettime then
     return M.randomseed(package.loaded["socket"].gettime()*10000)
   else
     return M.randomseed(os.time())
