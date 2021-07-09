@@ -5,7 +5,7 @@ Modified module from [Rackspace](https://github.com/kans/zirgo/blob/807250b1af67
 
 Notes
 =====
-Please read [documentation](http://tieske.github.com/uuid/) carefully regarding random seeds or unique strings to be provided to get a decent randomized uuid value.
+Please read [documentation](https://tieske.github.io/uuid/) carefully regarding random seeds or unique strings to be provided to get a decent randomized uuid value.
 
 Home
 ====
