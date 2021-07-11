@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/Tieske/uuid.svg?branch=master)](https://travis-ci.com/Tieske/uuid)
+
 uuid
 ====
 
@@ -27,6 +29,12 @@ and LuaCheck for linting.
 
 Changes
 =======
+
+0.3     11-Jul-2021
+
+  - Fix: set proper type for UUIDv4 type
+  - Feat: improve seeding for OpenResty
+  - Doc: fix link in readme
 
 0.2     09-May-2013
 
