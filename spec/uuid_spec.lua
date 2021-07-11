@@ -21,7 +21,7 @@ describe("Testing uuid library", function()
       assert.are_equal(36, #u)
     end
   end)
-  
+
   it("tests the hwaddr parameter" , function()
     assert.has_error(function() uuid("12345678901") end)        -- too short
     assert.has_error(function() uuid("123a4::xxyy;;590") end)   -- too short after clean
@@ -31,7 +31,7 @@ describe("Testing uuid library", function()
     assert.not_has_error(function() uuid("123456789012") end)   -- right size
     assert.not_has_error(function() uuid("1234567890123") end)  -- oversize
   end)
-  
+
   it("tests uuid.seed() using luasocket gettime() if available, os.time() if unavailable", function()
     -- create a fake socket module with a spy.
     local ls = { gettime = spy.new(function() return 123.123 end) }
@@ -39,14 +39,14 @@ describe("Testing uuid library", function()
     uuid.seed()
     package.loaded["socket"] = nil
     assert.spy(ls.gettime).was.called(1)
-    
+
     -- do again with os.time()
     local ot = os.time
-    os.time = spy.new(os.time)
+    os.time = spy.new(os.time) -- luacheck: ignore
     uuid.seed()
     assert.spy(os.time).was.called(1)
-    os.time = ot
-    
+    os.time = ot  -- luacheck: ignore
+
   end)
 
   it("tests uuid.randomseed() to properly limit the provided value", function()
@@ -54,5 +54,5 @@ describe("Testing uuid library", function()
     assert.are.equal(12345, uuid.randomseed(12345))
     assert.are.equal(12345, uuid.randomseed(12345 + 2^bitsize))
   end)
-  
+
 end)

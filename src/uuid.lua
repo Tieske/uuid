@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------------
--- Copyright 2012 Rackspace (original), 2013 Thijs Schreijer (modifications)
+-- Copyright 2012 Rackspace (original), 2013-2021 Thijs Schreijer (modifications)
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -23,10 +23,14 @@
 -- Regarding the above mention on `os.time()`; the modifications use the `socket.gettime()` function from LuaSocket
 -- if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).
 --
--- **6-nov-2015 Please take note of this issue**; [https://github.com/Mashape/kong/issues/478](https://github.com/Mashape/kong/issues/478)
+-- **Important:** the random seed is a global piece of data. Hence setting it is
+-- an application level responsibility, libraries should never set it!
+--
+-- See this issue; [https://github.com/Kong/kong/issues/478](https://github.com/Kong/kong/issues/478)
 -- It demonstrates the problem of using time as a random seed. Specifically when used from multiple processes.
 -- So make sure to seed only once, application wide. And to not have multiple processes do that
--- simultaneously (like nginx does for example).
+-- simultaneously.
+
 
 local M = {}
 local math = require('math')
@@ -191,6 +195,9 @@ end
 -- has been required already.
 -- 3. use `os.time()`: this only offers resolution to one second (used when
 -- LuaSocket hasn't been loaded)
+--
+-- **Important:** the random seed is a global piece of data. Hence setting it is
+-- an application level responsibility, libraries should never set it!
 -- @usage
 -- local socket = require("socket")  -- gettime() has higher precision than os.time()
 -- -- LuaSocket loaded, so below line does the same as the example from randomseed()

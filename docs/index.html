@@ -34,11 +34,11 @@
 
 
 <h2>Modules</h2>
-<ul class="$(kind=='Topics' and '' or 'nowrap'">
+<ul class="nowrap">
   <li><strong>uuid</strong></li>
 </ul>
 <h2>Topics</h2>
-<ul class="$(kind=='Topics' and '' or 'nowrap'">
+<ul class="">
   <li><a href="topics/readme.md.html">readme</a></li>
 </ul>
 
@@ -47,7 +47,7 @@
 <div id="content">
 
 <h1>Module <code>uuid</code></h1>
-<p>Copyright 2012 Rackspace (original), 2013 Thijs Schreijer (modifications)</p>
+<p>Copyright 2012 Rackspace (original), 2013-2021 Thijs Schreijer (modifications)</p>
 
 <p> Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.</p>
@@ -74,10 +74,13 @@ http://www.apache.org/licenses/LICENSE-<span class="number">2.0</span>
  Regarding the above mention on <code>os.time()</code>; the modifications use the <code>socket.gettime()</code> function from LuaSocket
  if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).</p>
 
-<p> <strong>6-nov-2015 Please take note of this issue</strong>; <a href="https://github.com/Mashape/kong/issues/478">https://github.com/Mashape/kong/issues/478</a>
+<p> <strong>Important:</strong> the random seed is a global piece of data. Hence setting it is
+ an application level responsibility, libraries should never set it!</p>
+
+<p> See this issue; <a href="https://github.com/Kong/kong/issues/478">https://github.com/Kong/kong/issues/478</a>
  It demonstrates the problem of using time as a random seed. Specifically when used from multiple processes.
  So make sure to seed only once, application wide. And to not have multiple processes do that
- simultaneously (like nginx does for example).</p>
+ simultaneously.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -144,9 +147,8 @@ http://www.apache.org/licenses/LICENSE-<span class="number">2.0</span>
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example">
- <span class="keyword">local</span> uuid = <span class="global">require</span>(<span class="string">"uuid"</span>)
- <span class="global">print</span>(<span class="string">"here's a new uuid: "</span>,uuid())</pre>
+        <pre class="example"><span class="keyword">local</span> uuid = <span class="global">require</span>(<span class="string">"uuid"</span>)
+<span class="global">print</span>(<span class="string">"here's a new uuid: "</span>,uuid())</pre>
     </ul>
 
 </dd>
@@ -180,12 +182,11 @@ http://www.apache.org/licenses/LICENSE-<span class="number">2.0</span>
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example">
- <span class="keyword">local</span> socket = <span class="global">require</span>(<span class="string">"socket"</span>)  <span class="comment">-- gettime() has higher precision than os.time()
-</span> <span class="keyword">local</span> uuid = <span class="global">require</span>(<span class="string">"uuid"</span>)
- <span class="comment">-- see also example at uuid.seed()
-</span> uuid.randomseed(socket.gettime()*<span class="number">10000</span>)
- <span class="global">print</span>(<span class="string">"here's a new uuid: "</span>,uuid())</pre>
+        <pre class="example"><span class="keyword">local</span> socket = <span class="global">require</span>(<span class="string">"socket"</span>)  <span class="comment">-- gettime() has higher precision than os.time()
+</span><span class="keyword">local</span> uuid = <span class="global">require</span>(<span class="string">"uuid"</span>)
+<span class="comment">-- see also example at uuid.seed()
+</span>uuid.randomseed(socket.gettime()*<span class="number">10000</span>)
+<span class="global">print</span>(<span class="string">"here's a new uuid: "</span>,uuid())</pre>
     </ul>
 
 </dd>
@@ -194,17 +195,20 @@ http://www.apache.org/licenses/LICENSE-<span class="number">2.0</span>
     <strong>seed ()</strong>
     </dt>
     <dd>
-
-<p>Seeds the random generator.
- It does so in 2 possible ways;</p>
+    Seeds the random generator.
+ It does so in 3 possible ways;</p>
 
 <ol>
-    <li>use <code>os.time()</code>: this only offers resolution to one second (used when
-    LuaSocket hasn't been loaded yet</li>
+    <li>if in ngx_lua, use <code>ngx.time() + ngx.worker.pid()</code> to ensure a unique seed
+    for each worker. It should ideally be called from the <code>init_worker</code> context.</li>
     <li>use luasocket <code>gettime()</code> function, but it only does so when LuaSocket
     has been required already.</li>
+    <li>use <code>os.time()</code>: this only offers resolution to one second (used when
+    LuaSocket hasn't been loaded)</li>
 </ol>
 
+<p> <strong>Important:</strong> the random seed is a global piece of data. Hence setting it is
+ an application level responsibility, libraries should never set it!
 
 
 
@@ -213,11 +217,10 @@ http://www.apache.org/licenses/LICENSE-<span class="number">2.0</span>
 
     <h3>Usage:</h3>
     <ul>
-        <pre class="example">
- <span class="keyword">local</span> socket = <span class="global">require</span>(<span class="string">"socket"</span>)  <span class="comment">-- gettime() has higher precision than os.time()
-</span> <span class="comment">-- LuaSocket loaded, so below line does the same as the example from randomseed()
-</span> uuid.seed()
- <span class="global">print</span>(<span class="string">"here's a new uuid: "</span>,uuid())</pre>
+        <pre class="example"><span class="keyword">local</span> socket = <span class="global">require</span>(<span class="string">"socket"</span>)  <span class="comment">-- gettime() has higher precision than os.time()
+</span><span class="comment">-- LuaSocket loaded, so below line does the same as the example from randomseed()
+</span>uuid.seed()
+<span class="global">print</span>(<span class="string">"here's a new uuid: "</span>,uuid())</pre>
     </ul>
 
 </dd>
@@ -227,8 +230,8 @@ http://www.apache.org/licenses/LICENSE-<span class="number">2.0</span>
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
-<i style="float:right;">Last updated 2015-11-09 10:26:13 </i>
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2021-07-11 08:59:24 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

@@ -17,13 +17,13 @@ Rackspace (original) and Thijs Schreijer (modifications), Apache 2.0, see `uuid.
 
 Install
 =======
-Use LuaRocks. For an installation from local source, do `sudo luarocks make` from the main directory. To fetch and install from a LuaRocks server without manual unpacking do `sudo luarocks install uuid`.
-
-NOTE: on windows, skip the `sudo` in the commands above.
+Use LuaRocks. To fetch and install from a LuaRocks server do `luarocks install uuid`.
+For a development installation from local source, do `luarocks make` from the main directory.
 
 Test
 ====
-Tests are available and can be executed using [busted](http://olivinelabs.com/busted/)
+Tests are available and can be executed using [busted](http://olivinelabs.com/busted/),
+and LuaCheck for linting.
 
 Changes
 =======
@@ -32,7 +32,7 @@ Changes
 
   - Bugfix; 0-hex was displayed as "" instead of "00", making some uuids too short
   - Bugfix; math.randomseed() overflow caused bad seeding
-  
+
 0.1     28-Apr-2013
 
   - initial version
