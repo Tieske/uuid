@@ -213,4 +213,18 @@ function M.seed()
   end
 end
 
+----------------------------------------------------------------------------
+-- This is workaround for OpenResty when it isn't possible to call seed() from `init_worker` context
+-- seedonce() shoud be called each time when you need to get new UUID.
+-- When it is called for the first time, it seeds random with seed() function.
+-- Each next call do nothing
+function M.seedonce()
+  if M.seeded ~= nil then
+    return M.seeded
+  end
+
+  M.seeded = M.seed()
+  return M.seeded
+end
+
 return setmetatable( M, { __call = function(self, hwaddr) return self.new(hwaddr) end} )
