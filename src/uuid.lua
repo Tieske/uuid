@@ -36,21 +36,16 @@ local M = {}
 local math = require('math')
 local os = require('os')
 local string = require('string')
-
-local bitsize = 32  -- bitsize assumed for Lua VM. See randomseed function below.
-local lua_version = tonumber(_VERSION:match("%d%.*%d*"))  -- grab Lua version used
+local prng = require('rand')
 
 local MATRIX_AND = {{0,0},{0,1} }
 local MATRIX_OR = {{0,1},{1,1}}
 local HEXES = '0123456789abcdef'
 
+local global_prng = prng.new()
+
 local math_floor = math.floor
-local math_random = math.random
-local math_abs = math.abs
 local string_sub = string.sub
-local to_number = tonumber
-local assert = assert
-local type = type
 
 -- performs the bitwise operation specified by truth matrix on two numbers.
 local function BITWISE(x, y, matrix)
@@ -98,48 +93,7 @@ end
 -- print("here's a new uuid: ",uuid())
 function M.new(hwaddr)
   -- bytes are treated as 8bit unsigned bytes.
-  local bytes = {
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255)
-    }
-
-  if hwaddr then
-    assert(type(hwaddr)=="string", "Expected hex string, got "..type(hwaddr))
-    -- Cleanup provided string, assume mac address, so start from back and cleanup until we've got 12 characters
-    local i,str = #hwaddr, hwaddr
-    hwaddr = ""
-    while i>0 and #hwaddr<12 do
-      local c = str:sub(i,i):lower()
-      if HEXES:find(c, 1, true) then
-        -- valid HEX character, so append it
-        hwaddr = c..hwaddr
-      end
-      i = i - 1
-    end
-    assert(#hwaddr == 12, "Provided string did not contain at least 12 hex characters, retrieved '"..hwaddr.."' from '"..str.."'")
-
-    -- no split() in lua. :(
-    bytes[11] = to_number(hwaddr:sub(1, 2), 16)
-    bytes[12] = to_number(hwaddr:sub(3, 4), 16)
-    bytes[13] = to_number(hwaddr:sub(5, 6), 16)
-    bytes[14] = to_number(hwaddr:sub(7, 8), 16)
-    bytes[15] = to_number(hwaddr:sub(9, 10), 16)
-    bytes[16] = to_number(hwaddr:sub(11, 12), 16)
-  end
+  local bytes = { string.byte(global_prng:Generate(hwaddr), 1, -1) } -- 16 random bytes
 
   -- set the version
   bytes[7] = BITWISE(bytes[7], 0x0f, MATRIX_AND)
@@ -170,31 +124,19 @@ end
 -- uuid.randomseed(socket.gettime()*10000)
 -- print("here's a new uuid: ",uuid())
 function M.randomseed(seed)
-  seed = math_floor(math_abs(seed))
-  if seed >= (2^bitsize) then
-    -- integer overflow, so reduce to prevent a bad seed
-    seed = seed - math_floor(seed / 2^bitsize) * (2^bitsize)
-  end
-  if lua_version < 5.2 then
-    -- 5.1 uses (incorrect) signed int
-    math.randomseed(seed - 2^(bitsize-1))
-  else
-    -- 5.2 uses (correct) unsigned int
-    math.randomseed(seed)
-  end
-  return seed
+    global_prng:SetSeed(tostring(seed))
 end
 
 ----------------------------------------------------------------------------
 -- Seeds the random generator.
 -- It does so in 3 possible ways;
 --
--- 1. if in ngx_lua, use `ngx.time() + ngx.worker.pid()` to ensure a unique seed
--- for each worker. It should ideally be called from the `init_worker` context.
--- 2. use luasocket `gettime()` function, but it only does so when LuaSocket
--- has been required already.
--- 3. use `os.time()`: this only offers resolution to one second (used when
--- LuaSocket hasn't been loaded)
+-- 1. if in ngx_lua, use `ngx.time() + ngx.worker.pid()` and `tostring({})` to ensure a unique seed
+-- for each worker. It should ideally be called from the `init_worker` context. Uses ASLR when possible.
+-- 2. use luasocket `gettime()` function and `tostring({})`, but it only does so when LuaSocket
+-- has been required already. Uses ASLR when possible.
+-- 3. use `os.time()` and `tostring({})`: this only offers resolution to one second (used when
+-- LuaSocket hasn't been loaded), but takes advantage of ASLR when applicable
 --
 -- **Important:** the random seed is a global piece of data. Hence setting it is
 -- an application level responsibility, libraries should never set it!
@@ -205,11 +147,11 @@ end
 -- print("here's a new uuid: ",uuid())
 function M.seed()
   if _G.ngx ~= nil then
-    return M.randomseed(ngx.time() + ngx.worker.pid())
+    return M.randomseed(ngx.time() .. ngx.worker_pid() .. tostring({}))
   elseif package.loaded["socket"] and package.loaded["socket"].gettime then
-    return M.randomseed(package.loaded["socket"].gettime()*10000)
+    return M.randomseed(package.loaded["socket"].gettime()*10000 .. tostring({}))
   else
-    return M.randomseed(os.time())
+    return M.randomseed(os.time() .. tostring({}))
   end
 end
 
