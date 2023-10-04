@@ -147,7 +147,7 @@ end
 -- print("here's a new uuid: ",uuid())
 function M.seed()
   if _G.ngx ~= nil then
-    return M.randomseed(ngx.time() .. ngx.worker_pid() .. tostring({}))
+    return M.randomseed(ngx.time() .. ngx.worker.pid() .. tostring({}))
   elseif package.loaded["socket"] and package.loaded["socket"].gettime then
     return M.randomseed(package.loaded["socket"].gettime()*10000 .. tostring({}))
   else
