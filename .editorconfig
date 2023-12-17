@@ -12,13 +12,12 @@ indent_size = 2
 
 [*.rockspec]
 indent_style = space
-indent_size = 3
-
-[*.c]
-indent_style = tab
-
-[Makefile]
-indent_style = tab
+indent_size = 2
 
 [*.md]
 indent_style = space
+indent_size = 2
+
+[Makefile]
+indent_style = tab
+indent_size = 4

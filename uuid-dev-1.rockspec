@@ -8,28 +8,33 @@ local github_repo_name = package_name
 package = package_name
 version = package_version.."-"..rockspec_revision
 source = {
-   url = "git://github.com/"..github_account_name.."/"..github_repo_name..".git",
-   branch = (package_version == "dev") and "master" or nil,
-   tag = (package_version ~= "dev") and package_version or nil,
+  url = "git+https://github.com/"..github_account_name.."/"..github_repo_name..".git",
+  branch = (package_version == "dev") and "master" or nil,
+  tag = (package_version ~= "dev") and package_version or nil,
 }
 
 description = {
-   summary = "Generates uuids in pure Lua",
-   detailed = [[
-      Generates uuids in pure Lua, but requires a
-      good random seed or a unique string. Please check the documentation.
-   ]],
-   license = "Apache 2.0",
-   homepage = "https://github.com/"..github_account_name.."/"..github_repo_name,
+  summary = "Generates uuids in pure Lua",
+  detailed = [[
+    Generates uuids in pure Lua, but requires a
+    good random seed or a unique string. Please check the documentation.
+  ]],
+  license = "Apache 2.0",
+  homepage = "https://github.com/"..github_account_name.."/"..github_repo_name,
 }
 
 dependencies = {
-   "lua >= 5.1",
+  "lua >= 5.1, < 5.5",
 }
 
 build = {
-   type = "builtin",
-   modules = {
-      ["uuid"] = "src/uuid.lua",
-   },
+  type = "builtin",
+  modules = {
+    ["uuid"] = "src/uuid.lua",
+    ["uuid.rng.init"] = "src/uuid/rng/init.lua",
+    ["uuid.rng.sha1"] = "src/uuid/rng/sha1.lua",
+  },
+  copy_directories = {
+    "docs",
+  },
 }

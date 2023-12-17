@@ -1,47 +1,21 @@
-[![Build Status](https://travis-ci.com/Tieske/uuid.svg?branch=master)](https://travis-ci.com/Tieske/uuid)
+[![Unix build](https://img.shields.io/github/actions/workflow/status/Tieske/uuid/unix_build.yml?branch=main&label=Unix%20build&logo=linux)](https://github.com/Tieske/uuid/actions/workflows/unix_build.yml)
+[![Coveralls code coverage](https://img.shields.io/coveralls/github/Tieske/uuid?logo=coveralls)](https://coveralls.io/github/Tieske/uuid)
+[![Lint](https://github.com/Tieske/uuid/workflows/Lint/badge.svg)](https://github.com/Tieske/uuid/actions/workflows/lint.yml)
+[![SemVer](https://img.shields.io/github/v/tag/Tieske/uuid?color=brightgreen&label=SemVer&logo=semver&sort=semver)](CHANGELOG.md)
 
-uuid
-====
+# uuid
 
-Modified module from [Rackspace](https://github.com/kans/zirgo/blob/807250b1af6725bad4776c931c89a784c1e34db2/util/uuid.lua) original. Generates uuids in pure Lua.
+Generates uuids in pure Lua, but requires a
+good random generator/seed or a unique string. Please check the documentation.
 
-Notes
-=====
-Please read [documentation](https://tieske.github.io/uuid/) carefully regarding random seeds or unique strings to be provided to get a decent randomized uuid value.
+## License and copyright
 
-Home
-====
-[Source code](https://github.com/Tieske/uuid) is on github
+See [LICENSE.md](LICENSE.md)
 
-License & copyright
-===================
-Rackspace (original) and Thijs Schreijer (modifications), Apache 2.0, see `uuid.lua`
+## Documentation
 
-Install
-=======
-Use LuaRocks. To fetch and install from a LuaRocks server do `luarocks install uuid`.
-For a development installation from local source, do `luarocks make` from the main directory.
+See [online documentation](https://Tieske.github.io/uuid/)
 
-Test
-====
-Tests are available and can be executed using [busted](http://olivinelabs.com/busted/),
-and LuaCheck for linting.
+## Changelog & Versioning
 
-Changes
-=======
-
-0.3     11-Jul-2021
-
-  - Fix: set proper type for UUIDv4 type
-  - Feat: improve seeding for OpenResty
-  - Doc: fix link in readme
-
-0.2     09-May-2013
-
-  - Bugfix; 0-hex was displayed as "" instead of "00", making some uuids too short
-  - Bugfix; math.randomseed() overflow caused bad seeding
-
-0.1     28-Apr-2013
-
-  - initial version
-
+See [CHANGELOG.md](CHANGELOG.md)
