@@ -7,7 +7,7 @@ source = {
 description = {
     summary = "Generates uuids in pure Lua",
     detailed = [[
-Generates uuids in pure Lua, but requires a 
+Generates uuids in pure Lua, but requires a
 good random seed or a unique string. Please check the documentation.
     ]],
     license = "Apache 2.0",
