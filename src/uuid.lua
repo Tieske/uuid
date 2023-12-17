@@ -1,53 +1,28 @@
 ---------------------------------------------------------------------------------------
 -- Copyright 2012 Rackspace (original), 2013-2021 Thijs Schreijer (modifications)
 --
--- Licensed under the Apache License, Version 2.0 (the "License");
--- you may not use this file except in compliance with the License.
--- You may obtain a copy of the License at
+-- see [http://www.ietf.org/rfc/rfc4122.txt](http://www.ietf.org/rfc/rfc4122.txt)
 --
---     http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing, software
--- distributed under the License is distributed on an "AS-IS" BASIS,
--- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
--- See the License for the specific language governing permissions and
--- limitations under the License.
---
--- see http://www.ietf.org/rfc/rfc4122.txt
---
--- Note that this is not a true version 4 (random) UUID.  Since `os.time()` precision is only 1 second, it would be hard
--- to guarantee spacial uniqueness when two hosts generate a uuid after being seeded during the same second.  This
--- is solved by using the node field from a version 1 UUID.  It represents the mac address.
---
--- 28-apr-2013 modified by Thijs Schreijer from the original [Rackspace code](https://github.com/kans/zirgo/blob/807250b1af6725bad4776c931c89a784c1e34db2/util/uuid.lua) as a generic Lua module.
--- Regarding the above mention on `os.time()`; the modifications use the `socket.gettime()` function from LuaSocket
--- if available and hence reduce that problem (provided LuaSocket has been loaded before uuid).
---
--- **Important:** the random seed is a global piece of data. Hence setting it is
--- an application level responsibility, libraries should never set it!
---
--- See this issue; [https://github.com/Kong/kong/issues/478](https://github.com/Kong/kong/issues/478)
--- It demonstrates the problem of using time as a random seed. Specifically when used from multiple processes.
--- So make sure to seed only once, application wide. And to not have multiple processes do that
--- simultaneously.
+-- @license MIT, see `LICENSE.md`.
 
 
 local M = {}
 local math = require('math')
 local os = require('os')
 local string = require('string')
+local format = string.format
+local char = string.char
+local byte = string.byte
 
 local bitsize = 32  -- bitsize assumed for Lua VM. See randomseed function below.
 local lua_version = tonumber(_VERSION:match("%d%.*%d*"))  -- grab Lua version used
 
 local MATRIX_AND = {{0,0},{0,1} }
 local MATRIX_OR = {{0,1},{1,1}}
-local HEXES = '0123456789abcdef'
 
 local math_floor = math.floor
 local math_random = math.random
 local math_abs = math.abs
-local string_sub = string.sub
 local to_number = tonumber
 local assert = assert
 local type = type
@@ -65,17 +40,75 @@ local function BITWISE(x, y, matrix)
   return z
 end
 
-local function INT2HEX(x)
-  local s,base = '',16
-  local d
-  while x > 0 do
-    d = x % base + 1
-    x = math_floor(x/base)
-    s = string_sub(HEXES, d, d)..s
+
+-- converts a HW identifier (mac address) to a string of byte values
+local hwaddr_to_bytes do
+  -- typically there is 1 address, so cache that one
+  local hwaddr_stored, bytes_stored
+
+  local function convert(hwaddr)
+    assert(type(hwaddr)=="string", "Expected hex string, got "..type(hwaddr))
+    -- Cleanup provided string, assume mac address, so start from back and cleanup until we've got 12 characters
+    local hwaddr_clean = hwaddr:gsub("[^%x]",""):sub(1,12):lower()
+    assert(#hwaddr_clean == 12, "Provided string did not contain at least 12 hex characters, got '"..hwaddr.."'")
+
+    return char(
+      to_number(hwaddr_clean:sub(1, 2), 16),
+      to_number(hwaddr_clean:sub(3, 4), 16),
+      to_number(hwaddr_clean:sub(5, 6), 16),
+      to_number(hwaddr_clean:sub(7, 8), 16),
+      to_number(hwaddr_clean:sub(9, 10), 16),
+      to_number(hwaddr_clean:sub(11, 12), 16)
+    )
   end
-  while #s < 2 do s = "0" .. s end
-  return s
+
+  function hwaddr_to_bytes(hwaddr)
+    if hwaddr_stored ~= hwaddr then
+      hwaddr_stored = hwaddr
+      bytes_stored = convert(hwaddr)
+    end
+    return bytes_stored
+  end
 end
+
+
+----------------------------------------------------------------------------
+-- [REPLACE] Should return a set of random bytes.
+-- This function MUST be replaced by a proper implementation. This is done
+-- purposely to force the user to think about the randomness of the bytes
+-- generated.
+-- @tparam integer n number of bytes to generate
+-- @treturn string of random bytes
+-- @usage
+-- local ok, system = pcall(require, "system")
+-- if ok then
+--   -- set the Lua-System random generator as the one to use
+--   uuid.get_random_bytes = system.get_random_bytes
+-- else
+--   -- use the weak one as a fallback
+--   uuid.get_random_bytes = uuid.weak_random_bytes
+-- end
+function M.get_random_bytes(n)
+  assert(n, "Expected number of bytes to generate")
+  error("Not implemented, please set a function to generate random bytes")
+end
+
+----------------------------------------------------------------------------
+-- Returns a set of random bytes. This implementation uses the default Lua
+-- `math.random()` function, which is not very random. It is recommended to
+-- replace this function with a better implementation.
+-- @tparam integer n number of bytes to generate
+-- @treturn string of random bytes
+-- @usage
+function M.weak_random_bytes(n)
+  assert(n, "Expected number of bytes to generate")
+  local bytes = {}
+  for i = 1, n do
+    bytes[i] = char(math_random(0, 255))
+  end
+  return table.concat(bytes)
+end
+
 
 ----------------------------------------------------------------------------
 -- Creates a new uuid. Either provide a unique hex string, or make sure the
@@ -92,66 +125,41 @@ end
 -- eg. `my_uuid = uuid(my_networkcard_macaddress)`
 --
 -- @return a properly formatted uuid string
--- @param hwaddr (optional) string containing a unique hex value (e.g.: `00:0c:29:69:41:c6`), to be used to compensate for the lesser `math_random()` function. Use a mac address for solid results. If omitted, a fully randomized uuid will be generated, but then you must ensure that the random seed is set properly!
+-- @param hwaddr (optional) string containing a unique hex value (e.g.: `00:0c:29:69:41:c6`),
+-- to be used to compensate for the lesser `math_random()` function. Use a mac address for solid
+-- results. If omitted, a fully randomized uuid will be generated, but then you must ensure that
+-- the random seed is set properly!
 -- @usage
 -- local uuid = require("uuid")
 -- print("here's a new uuid: ",uuid())
 function M.new(hwaddr)
-  -- bytes are treated as 8bit unsigned bytes.
-  local bytes = {
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255),
-      math_random(0, 255)
-    }
-
+  local bytes
   if hwaddr then
     assert(type(hwaddr)=="string", "Expected hex string, got "..type(hwaddr))
     -- Cleanup provided string, assume mac address, so start from back and cleanup until we've got 12 characters
-    local i,str = #hwaddr, hwaddr
-    hwaddr = ""
-    while i>0 and #hwaddr<12 do
-      local c = str:sub(i,i):lower()
-      if HEXES:find(c, 1, true) then
-        -- valid HEX character, so append it
-        hwaddr = c..hwaddr
-      end
-      i = i - 1
-    end
-    assert(#hwaddr == 12, "Provided string did not contain at least 12 hex characters, retrieved '"..hwaddr.."' from '"..str.."'")
+    local hwaddr_clean = hwaddr:gsub("[^%x]",""):sub(1,12):lower()
+    assert(#hwaddr_clean == 12, "Provided string did not contain at least 12 hex characters, got '"..hwaddr.."'")
 
-    -- no split() in lua. :(
-    bytes[11] = to_number(hwaddr:sub(1, 2), 16)
-    bytes[12] = to_number(hwaddr:sub(3, 4), 16)
-    bytes[13] = to_number(hwaddr:sub(5, 6), 16)
-    bytes[14] = to_number(hwaddr:sub(7, 8), 16)
-    bytes[15] = to_number(hwaddr:sub(9, 10), 16)
-    bytes[16] = to_number(hwaddr:sub(11, 12), 16)
+    bytes = hwaddr_to_bytes(hwaddr_clean)
+  else
+    bytes = M.get_random_bytes(6)
   end
 
+  local byte_7, byte_9
   -- set the version
-  bytes[7] = BITWISE(bytes[7], 0x0f, MATRIX_AND)
-  bytes[7] = BITWISE(bytes[7], 0x40, MATRIX_OR)
+  byte_7 = byte(M.get_random_bytes(1))
+  byte_7 = BITWISE(byte_7, 0x0f, MATRIX_AND)
+  byte_7 = BITWISE(byte_7, 0x40, MATRIX_OR)
+  byte_7 = char(byte_7)
   -- set the variant
-  bytes[9] = BITWISE(bytes[9], 0x3f, MATRIX_AND)
-  bytes[9] = BITWISE(bytes[9], 0x80, MATRIX_OR)
-  return INT2HEX(bytes[1])..INT2HEX(bytes[2])..INT2HEX(bytes[3])..INT2HEX(bytes[4]).."-"..
-         INT2HEX(bytes[5])..INT2HEX(bytes[6]).."-"..
-         INT2HEX(bytes[7])..INT2HEX(bytes[8]).."-"..
-         INT2HEX(bytes[9])..INT2HEX(bytes[10]).."-"..
-         INT2HEX(bytes[11])..INT2HEX(bytes[12])..INT2HEX(bytes[13])..INT2HEX(bytes[14])..INT2HEX(bytes[15])..INT2HEX(bytes[16])
+  byte_9 = byte(M.get_random_bytes(1))
+  byte_9 = BITWISE(byte_9, 0x3f, MATRIX_AND)
+  byte_9 = BITWISE(byte_9, 0x80, MATRIX_OR)
+  byte_9 = char(byte_9)
+
+  bytes = M.get_random_bytes(6) .. byte_7 .. M.get_random_bytes(1) .. byte_9 .. M.get_random_bytes(1) .. bytes
+
+  return format("%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x", byte(bytes, 1, 16))
 end
 
 ----------------------------------------------------------------------------
@@ -205,7 +213,7 @@ end
 -- print("here's a new uuid: ",uuid())
 function M.seed()
   if _G.ngx ~= nil then
-    return M.randomseed(ngx.time() + ngx.worker.pid())
+    return M.randomseed(ngx.time() + ngx.worker.pid())  -- luacheck: ignore
   elseif package.loaded["socket"] and package.loaded["socket"].gettime then
     return M.randomseed(package.loaded["socket"].gettime()*10000)
   else

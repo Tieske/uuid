@@ -1,14 +1,25 @@
-local uuid = require("uuid")
 
 -- start tests
 describe("Testing uuid library", function()
-
+  local uuid
+  local old_get_random_bytes
   before_each(function()
+    uuid = require("uuid")
+
+    old_get_random_bytes = uuid.get_random_bytes
+    uuid.get_random_bytes = function(n)
+      return string.char(0):rep(n)
+    end
+  end)
+
+  after_each(function()
+    uuid.get_random_bytes = old_get_random_bytes
   end)
 
   it("tests generating a uuid", function()
-    assert.is_string(uuid.new())
-    assert.is_string(uuid())
+    local id = uuid.new()
+    assert.are.same('00000000-0000-4000-8000-000000000000', id)
+    assert.are.same(id, uuid())
   end)
 
   it("tests the format of the generated uuid", function()
@@ -27,9 +38,12 @@ describe("Testing uuid library", function()
     assert.has_error(function() uuid("123a4::xxyy;;590") end)   -- too short after clean
     assert.has_error(function() uuid(true) end)                 -- not a string
     assert.has_error(function() uuid(123) end)                  -- not a string
-    assert.not_has_error(function() uuid("abcdefabcdef") end)   -- hex only
-    assert.not_has_error(function() uuid("123456789012") end)   -- right size
-    assert.not_has_error(function() uuid("1234567890123") end)  -- oversize
+    assert.has_no.error(function() uuid("abcdefabcdef") end)    -- hex only
+    assert.same('00000000-0000-4000-8000-abcdefabcdef', uuid("abcdefabcdef"))
+    assert.has_no.error(function() uuid("123456789012") end)    -- right size
+    assert.same('00000000-0000-4000-8000-123456789012', uuid("123456789012"))
+    assert.has_no.error(function() uuid("1234567890123") end)   -- oversize
+    assert.same('00000000-0000-4000-8000-123456789012', uuid("1234567890123"))
   end)
 
   it("tests uuid.seed() using luasocket gettime() if available, os.time() if unavailable", function()
