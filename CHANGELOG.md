@@ -30,9 +30,24 @@ The scope of what is covered by the version number excludes:
 
 ## Version history
 
-### Version X.Y.Z, unreleased
+### Version 1.0.0, unreleased
 
-- bla bla
+- BREAKING: no default rng will be picked anymore, one must be set explicitly, see `set_rng`
+- BREAKING: calling on the module table `uuid()` will now call `v4()` instead of `new()`
+  which means it no longer supports the `hwaddr` parameter
+- Change: `new` function with the `hwaddr` parameter is deprecated, will be removed later
+- Change: `randomseed` has moved to `rng.math_randomseed`, alias will be removed later
+- Change: `seed` has moved to `rng.seed`, alias will be removed later
+- Feat: new `rng` module with multiple `rng`s available
+- Feat: new `set_rng` function to set the `rng` to use
+- Feat: the `rng.seed` function has a new parameter `userinput` that allows the user to specify
+  additional input for seeding the Lua rng (eg. pass in a mac address).
+- Feat: new `rng.luasystem` rng that uses LuaSystem for random number generation (Posix + Windows)
+- Feat: new `rng.urandom` rng that uses /dev/urandom for random number generation (Posix, no Windows)
+- Feat: new `rng.math_random` rng that replaces the old rng used, based on Lua's `math.random` function.
+- Feat: improved seeding, using LuaSystem, or /dev/urandom if available. If not, the fallback now uses
+  more inputs (including a user provided one, eg. a mac address) and calculates a SHA1 used as seed.
+  Also support for the Lua 5.4
 
 ### Version 0.3, released 11-Jul-2021
 

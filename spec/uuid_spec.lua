@@ -7,9 +7,9 @@ describe("Testing uuid library", function()
     uuid = require("uuid")
 
     old_get_random_bytes = uuid.get_random_bytes
-    uuid.get_random_bytes = function(n)
+    uuid.set_rng(function(n)
       return string.char(0):rep(n)
-    end
+    end)
   end)
 
   after_each(function()
@@ -60,7 +60,6 @@ describe("Testing uuid library", function()
     uuid.seed()
     assert.spy(os.time).was.called(1)
     os.time = ot  -- luacheck: ignore
-
   end)
 
   it("tests uuid.randomseed() to properly limit the provided value", function()
