@@ -4,7 +4,7 @@ High quality UUIDs v4 can only be generated if the source of the random data is 
 If it is predictable then it might become a security risk.
 
 Read up on the use of the `rng.math_randomseed` and `rng.seed` functions if you need a pure-Lua
-implementation. Preferably the LuaSystem module is used strong random numbers, if Windows
+implementation. Preferably the LuaSystem module is used for strong random numbers, if Windows
 compatibility isn't required then falling back to /dev/urandom on Posix is a good alternative.
 
 When using neither of those and falling back to the Lua internal rng, ensure that it is

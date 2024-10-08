@@ -34,7 +34,7 @@ build = {
     ["uuid.rng.init"] = "src/uuid/rng/init.lua",
     ["uuid.rng.sha1"] = "src/uuid/rng/sha1.lua",
   },
-    copy_directories = {
+  copy_directories = {
     "docs",
   },
 }
