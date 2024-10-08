@@ -46,8 +46,17 @@ describe("Testing uuid library", function()
     assert.same('00000000-0000-4000-8000-123456789012', uuid.new("1234567890123"))
   end)
 
-  pending("uuid.v4()", function()
-    -- TODO: implement
+  it("uuid.v4()", function()
+    local id = uuid.v4()
+    assert.are.same('00000000-0000-4000-8000-000000000000', id)
+    assert.are.same(id, uuid())
+
+    local uuid_v4_pattern = "^%x%x%x%x%x%x%x%x%-%x%x%x%x%-4%x%x%x%-[%8%9aAbB]%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x$"
+    uuid.set_rng(uuid.rng.math_random())
+    for i = 1, 1000 do
+      local u = uuid.v4()
+      assert.are.equal(u, u:match(uuid_v4_pattern))
+    end
   end)
 
 end)
