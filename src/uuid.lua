@@ -36,10 +36,22 @@ end
 -- the function should be `func(n)`, where `n` is the number of bytes to
 -- generate. The function should return a binary string  of random bytes
 -- (not hex or otherwise encoded). Upon error it should return `nil + error message`.
+--
+-- The second parameter is used to directly pass in errors from the rng functions.
+-- See the example.
 -- @tparam function func the function to be used to generate random bytes
+-- @tparam[opt] string err optional error message to be thrown when `func` is not a function
 -- @treturn boolean `true`
-function M.set_rng(func)
-  assert(type(func) == "function", "Expected function, got "..type(func))
+-- @usage
+-- -- set the random number generator for /dev/urandom. On Windows this isn't available
+-- -- and it returns `nil+error`, which is passed on to `set_rng` which then
+-- -- throws a meaningful error.
+-- uuid.set_rng(uuid.rng.urandom())
+function M.set_rng(func, err)
+  if type(func) ~= "function" then
+    err = err or ("Expected function, got "..type(func))
+    error(tostring(err), 2)
+  end
   random_bytes = func
   return true
 end

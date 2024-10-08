@@ -59,4 +59,40 @@ describe("Testing uuid library", function()
     end
   end)
 
+
+
+  describe("set_rng()", function()
+
+    it("sets the rng used", function()
+      uuid.set_rng(function(n)
+        return string.char(1):rep(n)
+      end)
+
+      local id = uuid.v4()
+      assert.are.same('01010101-0101-4101-8101-010101010101', id)
+    end)
+
+
+    it("fails if not a function is provided", function()
+      assert.has.error(function()
+        uuid.set_rng("not a function")
+      end, "Expected function, got string")
+    end)
+
+
+    it("passes through the error", function()
+      local old_package_config = package.config
+      finally(function()
+        package.config = old_package_config -- luacheck: ignore
+      end)
+      -- make it think this is Windows
+      package.config = "\\" .. package.config:sub(2,-1) -- luacheck: ignore
+
+      assert.has.error(function()
+        uuid.set_rng(uuid.rng.urandom())
+      end, "/dev/urandom is not available on Windows")
+    end)
+
+  end)
+
 end)
