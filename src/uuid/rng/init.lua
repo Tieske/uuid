@@ -81,6 +81,7 @@ end
 ----------------------------------------------------------------------------
 -- Returns an rng that implements Windows' RtlGenRandom function which is
 -- a good source of randomness on all modern versions of Windows.
+-- Requires LuaJIT or a LuaJIT-compatible FFI library.
 -- @treturn function A function that returns `n` random bytes, signature: `byte_string, err = func(n)`
 -- @usage
 -- local uuid = require "uuid"
