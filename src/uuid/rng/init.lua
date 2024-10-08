@@ -78,7 +78,41 @@ function rng.luasystem()
   return sys.random
 end
 
+----------------------------------------------------------------------------
+-- Returns an rng that implements Windows' RtlGenRandom function which is
+-- a good source of randomness on all modern versions of Windows.
+-- @treturn function A function that returns `n` random bytes, signature: `byte_string, err = func(n)`
+-- @usage
+-- local uuid = require "uuid"
+-- uuid.set_rng(uuid.rng.win_ffi())
+function rng.win_ffi()
+  local ok, ffi = pcall(require, "ffi")
+  if not ok then 
+      ok, ffi = pcall(require, "cffi")
+  end
+  if not ok then
+    return nil, "ffi not available"
+  end
 
+  local ffi_defs = [[
+    unsigned char SystemFunction036(void *RandomBuffer, unsigned long RandomBufferLength);
+  ]]
+  ffi.cdef(ffi_defs)
+
+  local ok, advapi32 = pcall(ffi.load, "advapi32.dll")
+  if not ok then
+    return nil, "failed to load advapi32.dll" 
+  end
+
+  return function(n)
+    local buffer = ffi.new("unsigned char[?]", n)
+    local ok = advapi32.SystemFunction036(buffer, n)
+    if ok == 0 then 
+      return nil, "call to RtlGenRandom failed"
+    end
+    return ffi.string(buffer, n)
+  end
+end
 
 do
   local rnd = function(n)
