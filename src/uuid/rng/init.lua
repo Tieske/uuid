@@ -265,6 +265,13 @@ do
       end
     end
 
+    do -- try RtlGenRandom() via FFI on windows
+      local wf = rng.win_ffi()
+      if wf then
+        return wf(40)  -- this is crypto level, so good enough
+      end
+    end
+
     -- fallback to sha1 of a combination of values
     local seed = {
       unique_table_id,
