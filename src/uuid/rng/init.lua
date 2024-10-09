@@ -253,8 +253,8 @@ do
 
   ----------------------------------------------------------------------------
   -- Returns a binary string, sha1-like (40 bytes).
-  -- Generates crypto level randomness if `luasystem` or `/dev/urandom` is available.
-  -- If not available it returns a sha1 hash of a combination of string values:
+  -- Generates crypto level randomness if `luasystem`, `/dev/urandom`, or `win_ffi` is available.
+  -- If neither is available it returns a sha1 hash of a combination of string values:
   --
   -- - a unique table id (relying on ASLR)
   --
