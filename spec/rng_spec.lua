@@ -64,6 +64,25 @@ describe("rng's", function()
 
 
 
+  describe("win_ffi()", function()
+
+    it("fails on Posix", function()
+      local old_package_config = package.config
+      finally(function()
+        package.config = old_package_config -- luacheck: ignore
+      end)
+      -- make it think this is Windows
+      package.config = "/" .. package.config:sub(2,-1) -- luacheck: ignore
+
+      local rng, err = require("uuid").rng.win_ffi()
+      assert.is.falsy(rng)
+      assert.is.equal("win-ffi is only available on Windows", err)
+    end)
+
+  end)
+
+
+
   describe("urandom()", function()
 
     it("generates 1 byte", function()
