@@ -78,42 +78,61 @@ function rng.luasystem()
   return sys.random
 end
 
-----------------------------------------------------------------------------
--- Returns an rng that implements Windows' RtlGenRandom function which is
--- a good source of randomness on all modern versions of Windows.
--- Requires LuaJIT or a LuaJIT-compatible FFI library.
--- @treturn function A function that returns `n` random bytes, signature: `byte_string, err = func(n)`
--- @usage
--- local uuid = require "uuid"
--- uuid.set_rng(uuid.rng.win_ffi())
-function rng.win_ffi()
-  local ok, ffi = pcall(require, "ffi")
-  if not ok then 
-      ok, ffi = pcall(require, "cffi")
-  end
-  if not ok then
-    return nil, "ffi not available"
-  end
 
-  local ffi_defs = [[
-    unsigned char SystemFunction036(void *RandomBuffer, unsigned long RandomBufferLength);
-  ]]
-  ffi.cdef(ffi_defs)
 
-  local ok, advapi32 = pcall(ffi.load, "advapi32.dll")
-  if not ok then
-    return nil, "failed to load advapi32.dll" 
-  end
+do
+  local win_ffi_rng
 
-  return function(n)
-    local buffer = ffi.new("unsigned char[?]", n)
-    local ok = advapi32.SystemFunction036(buffer, n)
-    if ok == 0 then 
-      return nil, "call to RtlGenRandom failed"
+  ----------------------------------------------------------------------------
+  -- Returns an rng that implements Windows' RtlGenRandom function which is
+  -- a good source of randomness on all modern versions of Windows.
+  -- Requires LuaJIT or [`cffi-lua`](https://github.com/q66/cffi-lua).
+  -- @treturn function A function that returns `n` random bytes, signature: `byte_string, err = func(n)`
+  -- @usage
+  -- local uuid = require "uuid"
+  -- uuid.set_rng(uuid.rng.win_ffi())
+  function rng.win_ffi()
+    if package.config:sub(1, 1) ~= "\\" then
+      return nil, "win-ffi is only available on Windows"
     end
-    return ffi.string(buffer, n)
+
+    -- return cahced rng function if we already created it
+    if win_ffi_rng then
+      return win_ffi_rng
+    end
+
+    local ok, ffi = pcall(require, "ffi")
+    if not ok then
+        ok, ffi = pcall(require, "cffi")
+    end
+    if not ok then
+      return nil, "ffi not available"
+    end
+
+    local ffi_defs = [[
+      unsigned char SystemFunction036(void *RandomBuffer, unsigned long RandomBufferLength);
+    ]]
+    ffi.cdef(ffi_defs)
+
+    local ok, advapi32 = pcall(ffi.load, "advapi32.dll")
+    if not ok then
+      return nil, "failed to load advapi32.dll"
+    end
+
+    win_ffi_rng = function(n)
+      local buffer = ffi.new("unsigned char[?]", n)
+      local ok = advapi32.SystemFunction036(buffer, n)
+      if ok == 0 then
+        return nil, "call to RtlGenRandom failed"
+      end
+      return ffi.string(buffer, n)
+    end
+
+    return win_ffi_rng
   end
 end
+
+
 
 do
   local rnd = function(n)
@@ -219,6 +238,7 @@ end
 if lua_version >= 5.4 then
   rng.math_randomseed = math_randomseed
 end
+
 
 
 do
@@ -338,6 +358,7 @@ do
     return rng.math_randomseed(seed1, seed2)
   end
 end
+
 
 
 return rng
