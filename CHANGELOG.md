@@ -30,7 +30,7 @@ The scope of what is covered by the version number excludes:
 
 ## Version history
 
-### Version 1.0.0, unreleased
+### Version 1.0.0, released 9-Oct-2024
 
 - BREAKING: no default rng will be picked anymore, one must be set explicitly, see `set_rng`
 - BREAKING: calling on the module table `uuid()` will now call `v4()` instead of `new()`
@@ -44,6 +44,7 @@ The scope of what is covered by the version number excludes:
   additional input for seeding the Lua rng (eg. pass in a mac address).
 - Feat: new `rng.luasystem` rng that uses LuaSystem for random number generation (Posix + Windows)
 - Feat: new `rng.urandom` rng that uses /dev/urandom for random number generation (Posix, no Windows)
+- Feat: new `rng.win_ffi` rng that uses the ffi for random number generation (Windows, no Posix)
 - Feat: new `rng.math_random` rng that replaces the old rng used, based on Lua's `math.random` function.
 - Feat: improved seeding, using LuaSystem, or /dev/urandom if available. If not, the fallback now uses
   more inputs (including a user provided one, eg. a mac address) and calculates a SHA1 used as seed.

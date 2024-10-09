@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>uuid generator</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>uuid</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Build_in_rng_functions_getting_random_numbers_from_different_sources">Build in rng functions getting random numbers from different sources </a></li>
+<li><a href="#Functions_to_improve_Lua_s_seeding">Functions to improve Lua's seeding </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/uuid.html">uuid</a></li>
+  <li><strong>uuid.rng</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/01-introduction.md.html">1. Introduction</a></li>
+  <li><a href="../topics/CHANGELOG.md.html">CHANGELOG</a></li>
+  <li><a href="../topics/LICENSE.md.html">Apache 2.0 License</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>uuid.rng</code></h1>
+<p>Random number generator utilities with different properties and uses.</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Build_in_rng_functions_getting_random_numbers_from_different_sources">Build in rng functions getting random numbers from different sources </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#luasystem">luasystem ()</a></td>
+	<td class="summary">Returns an rng that implements LuaSystem's <code>system.random()</code> function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#math_random">math_random ()</a></td>
+	<td class="summary">Returns an rng that implementats the default Lua <code>math.random()</code> function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#urandom">urandom ()</a></td>
+	<td class="summary">Returns an rng that reads from <code>/dev/urandom</code>, which is a good source of
+ randomness but only available on Posix systems.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#win_ffi">win_ffi ()</a></td>
+	<td class="summary">Returns an rng that implements Windows' RtlGenRandom function which is
+ a good source of randomness on all modern versions of Windows.</td>
+	</tr>
+</table>
+<h2><a href="#Functions_to_improve_Lua_s_seeding">Functions to improve Lua's seeding </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#generate_seed">generate_seed ([inputdata])</a></td>
+	<td class="summary">Returns a binary string, sha1-like (40 bytes).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#math_randomseed">math_randomseed (seed, seed2)</a></td>
+	<td class="summary">Improved <a href="https://www.lua.org/manual/5.4/manual.html#pdf-math.randomseed">math.randomseed</a> function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#seed">seed ([inputdata])</a></td>
+	<td class="summary">Seeds the Lua random generator, relies on <a href="../modules/uuid.rng.html#generate_seed">generate_seed</a>.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Build_in_rng_functions_getting_random_numbers_from_different_sources"></a>Build in rng functions getting random numbers from different sources </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "luasystem"></a>
+    <strong>luasystem ()</strong>
+    </dt>
+    <dd>
+    Returns an rng that implements LuaSystem's <code>system.random()</code> function.
+ which is a good source of randomness (for both Windows and Posix). Ensure
+ that LuaSystem is installed and available.
+ Since it uses LuaSystem there is no need to seed Lua's random number generator
+ before using this function.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        A function that returns <code>n</code> random bytes, signature: <code>byte_string, err = func(n)</code>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> uuid = <span class="global">require</span> <span class="string">"uuid"</span>
+uuid.<span class="function-name">set_rng</span>(uuid.rng.<span class="function-name">luasystem</span>())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "math_random"></a>
+    <strong>math_random ()</strong>
+    </dt>
+    <dd>
+    Returns an rng that implementats the default Lua <code>math.random()</code> function.
+ In Lua 5.1 to 5.3 this relies on the C <code>rand()</code> function, which is low quality and
+ predictable, so essentially a bad source of randomness. In Lua 5.4 this is
+ improved because it includes its own (way better, but not crypto-grade) rng.</p>
+
+<p> <strong>Important:</strong> ensure to use a good random seed set via <a href="../modules/uuid.rng.html#math_randomseed">rng.math_randomseed</a>, and
+ do this only once, since it is an application responsibility, not a library one.
+ Check out <a href="../modules/uuid.rng.html#seed">rng.seed</a> and <a href="../modules/uuid.rng.html#generate_seed">rng.generate_seed</a> for better seeding.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        A function that returns <code>n</code> random bytes, signature: <code>byte_string, err = func(n)</code>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> uuid = <span class="global">require</span> <span class="string">"uuid"</span>
+uuid.rng.<span class="function-name">math_randomseed</span>(some_really_good_seed)
+uuid.<span class="function-name">set_rng</span>(uuid.rng.<span class="function-name">math_random</span>())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "urandom"></a>
+    <strong>urandom ()</strong>
+    </dt>
+    <dd>
+    Returns an rng that reads from <code>/dev/urandom</code>, which is a good source of
+ randomness but only available on Posix systems.
+ Since it uses <code>/dev/urandom</code> there is no need to seed Lua's random number
+ generator before using this function.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        A function that returns <code>n</code> random bytes, signature: <code>byte_string, err = func(n)</code>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> uuid = <span class="global">require</span> <span class="string">"uuid"</span>
+uuid.<span class="function-name">set_rng</span>(uuid.rng.<span class="function-name">urandom</span>())</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "win_ffi"></a>
+    <strong>win_ffi ()</strong>
+    </dt>
+    <dd>
+    Returns an rng that implements Windows' RtlGenRandom function which is
+ a good source of randomness on all modern versions of Windows.
+ Requires LuaJIT or <a href="https://github.com/q66/cffi-lua"><code>cffi-lua</code></a>.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">function</span></span>
+        A function that returns <code>n</code> random bytes, signature: <code>byte_string, err = func(n)</code>
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">local</span> uuid = <span class="global">require</span> <span class="string">"uuid"</span>
+uuid.<span class="function-name">set_rng</span>(uuid.rng.<span class="function-name">win_ffi</span>())</pre>
+    </ul>
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Functions_to_improve_Lua_s_seeding"></a>Functions to improve Lua's seeding </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "generate_seed"></a>
+    <strong>generate_seed ([inputdata])</strong>
+    </dt>
+    <dd>
+    Returns a binary string, sha1-like (40 bytes).
+ Generates crypto level randomness if <a href="../modules/uuid.rng.html#luasystem">luasystem</a>, <code>/dev/urandom</code>, or <a href="../modules/uuid.rng.html#win_ffi">win_ffi</a> is available.
+ If neither is available it returns a sha1 hash of a combination of string values:</p>
+
+<ul>
+    <li><p>a unique table id (relying on ASLR)</p></li>
+    <li><p>the <code>inputdata</code> string if provided</p></li>
+    <li><p>10 bytes generated using <a href="https://www.lua.org/manual/5.4/manual.html#pdf-math.random">math.random</a> for which the quality depends on the Lua version in use</p></li>
+    <li><p>the current time in seconds with microsecond precision (using OpenResty or LuaSocket), or
+    otherwise falls back to <a href="https://www.lua.org/manual/5.4/manual.html#pdf-os.time">os.time</a> with second precision</p></li>
+    <li><p>the current worker's <code>pid</code> and <code>id</code> (OpenResty only)</p></li>
+</ul>
+
+<p> <strong>Important:</strong> ensure you understand what this does. Otherwise just use LuaSystem!!
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">inputdata</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.4/manual.html#6.4">string</a></span>
+         additional entropy input to be used in the seed generation in case of a sha1 fallback
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.4/manual.html#6.4">string</a></span>
+        a 40 bytes long binary string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "math_randomseed"></a>
+    <strong>math_randomseed (seed, seed2)</strong>
+    </dt>
+    <dd>
+    Improved <a href="https://www.lua.org/manual/5.4/manual.html#pdf-math.randomseed">math.randomseed</a> function.
+ Lua 5.4 takes 2 args 64bit, it uses an internal rng. Both seed values should
+ range from <a href="https://www.lua.org/manual/5.4/manual.html#pdf-math.mininteger">math.mininteger</a> to <a href="https://www.lua.org/manual/5.4/manual.html#pdf-math.maxinteger">math.maxinteger</a> (64bit signed integers).
+ If they are not, Lua will throw an error. Hence this function does not
+ modify the seed values in the Lua 5.4 case.</p>
+
+<p> Lua 5.1 to 5.3 use the C function <code>srand</code> which takes an unsigned Int.
+ The range should be from 0 to 2^32. If the seed is outside this range, it
+ will be silently truncated to fit within the range. This can lead to the same
+ sequence of random numbers being generated each time the application is run.</p>
+
+<p> This function ensures that the seed is within the proper range by dropping
+ the most significant bits if it exceeds the integer range. And any negative
+ values are made positive first. It can be used as a drop-in replacement for
+ <code>math.randomseed()</code>.</p>
+
+<p> <strong>Important:</strong> the random seed is a global piece of data. Hence setting it is
+ an application level responsibility, libraries should never set it!
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">seed</span>
+            <span class="types"><span class="type">integer</span></span>
+         the random seed to set 0 to 2^32-1 for Lua 5.1-5.3, <code>mininteger</code> to <code>maxinteger</code> for Lua 5.4+
+        </li>
+        <li><span class="parameter">seed2</span>
+            <span class="types"><span class="type">integer</span></span>
+         second part of the seed, only for Lua 5.4+, <code>mininteger</code> to <code>maxinteger</code>
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        integer the seed(s) used (potentially modified inputs)
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="comment">-- patch Lua's version
+</span>_G.<span class="global">math</span>.randomseed = <span class="global">require</span>(<span class="string">"uuid"</span>).rng.math_randomseed</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "seed"></a>
+    <strong>seed ([inputdata])</strong>
+    </dt>
+    <dd>
+    Seeds the Lua random generator, relies on <a href="../modules/uuid.rng.html#generate_seed">generate_seed</a>. </p>
+
+<p> <strong>Important:</strong> ensure you understand what <a href="../modules/uuid.rng.html#generate_seed">generate_seed</a> does!!</p>
+
+<p> A seed will be generated by <a href="../modules/uuid.rng.html#generate_seed">generate_seed</a> (40 byte string) and after conversion
+ in the proper format, it will be used to seed the Lua random number generator
+ by calling <a href="../modules/uuid.rng.html#math_randomseed">math_randomseed</a>.</p>
+
+<p> For Lua 5.1 to 5.3 it will use the first 4 bytes of the generated seed to create
+ a 32 bit integer seed. For Lua 5.4+ it will unpack the first 16 bytes in 2 64bit
+ integers used as seeds.</p>
+
+<p> <strong>Important:</strong> the random seed is a global piece of data. Hence setting it is
+ an application level responsibility, libraries should never set it!
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">inputdata</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.4/manual.html#6.4">string</a></span>
+         additional entropy passed to <a href="../modules/uuid.rng.html#generate_seed">generate_seed</a>
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        the results from <a href="../modules/uuid.rng.html#math_randomseed">rng.math_randomseed</a>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2024-10-09 13:35:51 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

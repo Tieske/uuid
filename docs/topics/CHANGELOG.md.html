@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>uuid generator</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>uuid</h1>
+
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Versioning">Versioning </a></li>
+<li><a href="#Version_history">Version history </a></li>
+</ul>
+
+
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="../topics/01-introduction.md.html">1. Introduction</a></li>
+  <li><strong>CHANGELOG</strong></li>
+  <li><a href="../topics/LICENSE.md.html">Apache 2.0 License</a></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/uuid.html">uuid</a></li>
+  <li><a href="../modules/uuid.rng.html">uuid.rng</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+
+<h1>CHANGELOG</h1>
+
+<p><a name="Versioning"></a></p>
+<h2>Versioning</h2>
+
+<p>This library is versioned based on Semantic Versioning (<a href="https://semver.org/">SemVer</a>).</p>
+
+<h4>Version scoping</h4>
+
+<p>The scope of what is covered by the version number excludes:</p>
+
+<ul>
+    <li>error messages; the text of the messages can change, unless specifically documented.</li>
+</ul>
+
+<h4>Releasing new versions</h4>
+
+<ul>
+    <li>create a release branch</li>
+    <li>update the changelog below</li>
+    <li>update version and copyright-years in <code>./LICENSE.md</code> (bottom) and <code>./src/uuid.lua</code> (in
+    doc-comments header)</li>
+    <li>create a new rockspec and update the version inside the new rockspec:<br/>
+    <code>cp uuid-dev-1.rockspec ./rockspecs/uuid-X.Y.Z-1.rockspec</code></li>
+    <li>test: run <code>make test</code> and <code>make lint</code></li>
+    <li>clean and render the docs: run <code>make clean</code> and <code>make docs</code></li>
+    <li>commit the changes as <code>release X.Y.Z</code></li>
+    <li>push the commit, and create a release PR</li>
+    <li>after merging tag the release commit with <code>X.Y.Z</code></li>
+    <li>upload to LuaRocks:<br/>
+    <code>luarocks upload ./rockspecs/uuid-X.Y.Z-1.rockspec --api-key=ABCDEFGH</code></li>
+    <li>test the newly created rock:<br/>
+    <code>luarocks install uuid</code></li>
+</ul>
+
+<p><a name="Version_history"></a></p>
+<h2>Version history</h2>
+
+<h3>Version 1.0.0, released 9-Oct-2024</h3>
+
+<ul>
+    <li>BREAKING: no default rng will be picked anymore, one must be set explicitly, see <code>set_rng</code></li>
+    <li>BREAKING: calling on the module table <code>uuid()</code> will now call <code>v4()</code> instead of <code>new()</code>
+    which means it no longer supports the <code>hwaddr</code> parameter</li>
+    <li>Change: <code>new</code> function with the <code>hwaddr</code> parameter is deprecated, will be removed later</li>
+    <li>Change: <code>randomseed</code> has moved to <code>rng.math_randomseed</code>, alias will be removed later</li>
+    <li>Change: <code>seed</code> has moved to <code>rng.seed</code>, alias will be removed later</li>
+    <li>Feat: new <code>rng</code> module with multiple <code>rng</code>s available</li>
+    <li>Feat: new <code>set_rng</code> function to set the <code>rng</code> to use</li>
+    <li>Feat: the <code>rng.seed</code> function has a new parameter <code>userinput</code> that allows the user to specify
+    additional input for seeding the Lua rng (eg. pass in a mac address).</li>
+    <li>Feat: new <code>rng.luasystem</code> rng that uses LuaSystem for random number generation (Posix + Windows)</li>
+    <li>Feat: new <code>rng.urandom</code> rng that uses /dev/urandom for random number generation (Posix, no Windows)</li>
+    <li>Feat: new <code>rng.win_ffi</code> rng that uses the ffi for random number generation (Windows, no Posix)</li>
+    <li>Feat: new <code>rng.math_random</code> rng that replaces the old rng used, based on Lua's <a href="https://www.lua.org/manual/5.4/manual.html#pdf-math.random">math.random</a> function.</li>
+    <li>Feat: improved seeding, using LuaSystem, or /dev/urandom if available. If not, the fallback now uses
+    more inputs (including a user provided one, eg. a mac address) and calculates a SHA1 used as seed.
+    Also support for the Lua 5.4</li>
+</ul>
+
+<h3>Version 0.3, released 11-Jul-2021</h3>
+
+<ul>
+    <li>Fix: set proper type for UUIDv4 type</li>
+    <li>Feat: improve seeding for OpenResty</li>
+    <li>Doc: fix link in readme</li>
+</ul>
+
+<h3>Version 0.2, released 09-May-2013</h3>
+
+<ul>
+    <li>Bugfix; 0-hex was displayed as "" instead of "00", making some uuids too short</li>
+    <li>Bugfix; math.randomseed() overflow caused bad seeding</li>
+</ul>
+
+<h3>Version 0.1, released 28-Apr-2013</h3>
+
+<ul>
+    <li>initial version</li>
+</ul>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/lunarmodules/LDoc">LDoc 1.5.0</a></i>
+<i style="float:right;">Last updated 2024-10-09 13:35:51 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
