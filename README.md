@@ -1,4 +1,4 @@
-[![Unix build](https://img.shields.io/github/actions/workflow/status/Tieske/uuid/unix_build.yml?branch=main&label=Unix%20build&logo=linux)](https://github.com/Tieske/uuid/actions/workflows/unix_build.yml)
+[![Unix build](https://img.shields.io/github/actions/workflow/status/Tieske/uuid/unix_build.yml?branch=master&label=Unix%20build&logo=linux)](https://github.com/Tieske/uuid/actions/workflows/unix_build.yml)
 [![Coveralls code coverage](https://img.shields.io/coveralls/github/Tieske/uuid?logo=coveralls)](https://coveralls.io/github/Tieske/uuid)
 [![Lint](https://github.com/Tieske/uuid/workflows/Lint/badge.svg)](https://github.com/Tieske/uuid/actions/workflows/lint.yml)
 [![SemVer](https://img.shields.io/github/v/tag/Tieske/uuid?color=brightgreen&label=SemVer&logo=semver&sort=semver)](CHANGELOG.md)
